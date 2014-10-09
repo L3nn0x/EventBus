@@ -72,4 +72,5 @@ int main()
 	b->Add_listener("plop", [] (Event_bus::Base_message *i) { Event_bus::Message<std::string> *tmp = static_cast<Event_bus::Message<std::string>*>(i); std::cout<<"troisieme foo :\n"<<*tmp->Get_data()<<std::endl; });
 	b->Send_message(m);
 	b->Send_message(new Event_bus::Message<std::string>("plop", std::string("plop")));
+	delete b;
 }
