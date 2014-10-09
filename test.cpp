@@ -73,4 +73,5 @@ int main()
 	b->Send_message(m);
 	delete b->Send_message(new Event_bus::Message<std::string>("plop", std::string("plop")));
 	delete b;
+	return 0;
 }
