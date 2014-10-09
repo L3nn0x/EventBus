@@ -8,8 +8,14 @@
 
 namespace Event_bus
 {
+	class   Base_message
+	{
+		public:
+		virtual ~Base_message() {}
+	};
+	
 	template<typename T>
-	class Message
+	class Message : public Base_message
 	{
 		public:
 		Message(std::string id, T data) : m_data(new T(data))
@@ -31,34 +37,39 @@ namespace Event_bus
 	class Bus
 	{
 		public:
-		Bus();
-		~Bus();
+		Bus() {}
+		~Bus() {}
 
-		void    Add_listener(std::string id, std::function<void(void*)> function)
+		void    Add_listener(std::string id, std::function<void(Base_message*)> function)
 		{
 			std::hash<std::string>  hash;
-			listeners.insert(std::pair<unsigned int, std::function<void(void*)>>(hash(id), function));
+			listeners.insert(std::pair<unsigned int, std::function<void(Base_message*)>>(hash(id), function));
 		}
 
-		template<typename T>
-		void    Send_message(Message<T> message)
+		template<typename U>
+		void    Send_message(Message<U> *message)
 		{
-			for (auto i : listeners.equal_range(message.Get_id()))
+			auto    range = listeners.equal_range(message->Get_id());
+			for_each(range.first, range.second, [message] (std::unordered_multimap<unsigned int, std::function<void(Base_message*)>>::value_type& i)
 			{
-				i->second(message.Get_data());
-			}
+				i.second(message);
+			});
+			delete message;
 		}
 
 		protected:
-		std::unordered_multimap<unsigned int, std::function<void(void*)>>  listeners;
+		std::unordered_multimap<unsigned int, std::function<void(Base_message*)>>  listeners;
 	};
 }
 
 int main()
 {
 	std::cout<<"Creating message"<<std::endl;
-	Event_bus::Message<std::string> m("record", std::string("hello"));
-	Event_bus::Bus  b();
-	b.Add_listener("record", [] (void *i) { std::string *tmp = static_cast<std::string*>(i); std::cout<<*tmp<<std::endl;});
-	b.Send_message(m);
+	Event_bus::Message<std::string> *m = new Event_bus::Message<std::string>("record", std::string("hello"));
+	Event_bus::Bus  *b = new Event_bus::Bus();
+	b->Add_listener("record", [] (Event_bus::Base_message *i) { Event_bus::Message<std::string> *tmp = static_cast<Event_bus::Message<std::string>*>(i); std::cout<<"Premiere foo :\n"<<*tmp->Get_data()<<std::endl; });
+	b->Add_listener("record", [] (Event_bus::Base_message *i) { Event_bus::Message<std::string> *tmp = static_cast<Event_bus::Message<std::string>*>(i); std::cout<<"deuxieme foo :\n"<<*tmp->Get_data()<<std::endl; });
+	b->Add_listener("plop", [] (Event_bus::Base_message *i) { Event_bus::Message<std::string> *tmp = static_cast<Event_bus::Message<std::string>*>(i); std::cout<<"troisieme foo :\n"<<*tmp->Get_data()<<std::endl; });
+	b->Send_message(m);
+	b->Send_message(new Event_bus::Message<std::string>("plop", std::string("plop")));
 }
