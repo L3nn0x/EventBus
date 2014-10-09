@@ -47,14 +47,14 @@ namespace Event_bus
 		}
 
 		template<typename U>
-		void    Send_message(Message<U> *message)
+		Message<U>    *Send_message(Message<U> *message)
 		{
 			auto    range = listeners.equal_range(message->Get_id());
 			for_each(range.first, range.second, [message] (std::unordered_multimap<unsigned int, std::function<void(Base_message*)>>::value_type& i)
 			{
 				i.second(message);
 			});
-			delete message;
+			return message;
 		}
 
 		protected:
@@ -71,6 +71,6 @@ int main()
 	b->Add_listener("record", [] (Event_bus::Base_message *i) { Event_bus::Message<std::string> *tmp = static_cast<Event_bus::Message<std::string>*>(i); std::cout<<"deuxieme foo :\n"<<*tmp->Get_data()<<std::endl; });
 	b->Add_listener("plop", [] (Event_bus::Base_message *i) { Event_bus::Message<std::string> *tmp = static_cast<Event_bus::Message<std::string>*>(i); std::cout<<"troisieme foo :\n"<<*tmp->Get_data()<<std::endl; });
 	b->Send_message(m);
-	b->Send_message(new Event_bus::Message<std::string>("plop", std::string("plop")));
+	delete b->Send_message(new Event_bus::Message<std::string>("plop", std::string("plop")));
 	delete b;
 }
