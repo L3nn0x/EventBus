@@ -11,26 +11,30 @@ namespace Event_bus
 	class   Base_message
 	{
 		public:
+		Base_message(std::string id)
+		{
+			std::hash<std::string>  hash;
+
+			m_id = hash(id);
+		}
+
+		unsigned int    Get_id() const { return m_id; }
 		virtual ~Base_message() {}
+
+		protected:
+		unsigned int    m_id;
 	};
 	
 	template<typename T>
 	class Message : public Base_message
 	{
 		public:
-		Message(std::string id, T data) : m_data(new T(data))
-		{
-			std::hash<std::string> hash;
-        
-			m_id = hash(id);
-		}
+		Message(std::string id, T data) : Base_message(id), m_data(new T(data))
+		{}
 
 		T*  Get_data(void) const { return m_data.get(); }
 
-		unsigned int    Get_id(void) const { return m_id; }
-
 		protected:
-			unsigned int  m_id;
 			std::auto_ptr<T> m_data;
 	};
   
